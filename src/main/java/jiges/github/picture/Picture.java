@@ -1,5 +1,6 @@
 package jiges.github.picture;
 
+import jiges.github.PressClient;
 import se.vidstige.jadb.*;
 
 import javax.imageio.ImageIO;
@@ -7,9 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.Socket;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,6 +25,7 @@ public class Picture {
     public static final Rgb LITTLE_MAN_RGB_MIN = new Rgb(43,43,70);
     public static final Rgb LITTLE_MAN_RGB_MAX = new Rgb(60,60,108);
 
+
     public static final int LITTLE_MAN_WIDTH = 60;
 
     private JadbDevice device;
@@ -36,51 +36,12 @@ public class Picture {
 
     private int distance;
 
-    //存储图像数据
-    private byte[] imageData = null;
-
-    public static void main(String[] args) {
-        JadbConnection jadb = null;
-        try {
-            jadb = new JadbConnection();
-            List<JadbDevice> devices = jadb.getDevices();
-            if(null == devices || devices.isEmpty()) {
-                System.out.println("未找到设备.");
-                System.exit(0);
-            }
-            JadbDevice device = devices.get(0);
-            Picture picture = new Picture(device);
-            picture.initImageViewer();
-            picture.loadPicture();
-//            int loadCnt = 0;
-//            while(true) {
-//                picture.loadPicture();
-//                TimeUnit.SECONDS.sleep(2);
-//                loadCnt ++;
-//                if(loadCnt % 2 == 1) {
-//                    picture.analyze();
-//                    picture.sendCommand();
-//                }
-//            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JadbException e) {
-            e.printStackTrace();
-        } /*catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
-
-    }
-
-    /**
-     * adb截屏，将图片保存到pc中进行分析
-     */
     public Picture(JadbDevice device) {
         this.device = device;
     }
 
-    private void initImageViewer() {
+    //图片的展示
+    public void initImageViewer() {
         this.imageViewer = new ImageViewer(DEFAULT_WIDTH,DEFAULT_HEIGHT);
         this.imageViewer.getRefreshBtn().addActionListener(new ActionListener() {
             @Override
@@ -98,61 +59,33 @@ public class Picture {
         this.imageViewer.getSendBtn().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                sendCommand();
+                PressClient.sendCommand(distance);
             }
         });
         this.imageViewer.setVisible(true);
     }
 
-    private void sendCommand() {
-        Socket socket = null;
-        try {
-            socket = new Socket("localhost",8899);
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            out.writeUTF(String.valueOf(distance));
-        } catch (IOException e1) {
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException e2) {
-                    socket = null;
-                }
-            }
-            e1.printStackTrace();
-        } finally {
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException e1) {
-                    socket = null;
-                }
-            }
-        }
-    }
 
     /**
-     * 从手机中加载图片
+     * adb截屏，将图片加载到pc中进行分析
      */
-    private void loadPicture(){
+    public void loadPicture(){
         ByteArrayOutputStream outputStream = null;
         try {
             device.executeShell("mkdir","/sdcard/screenshot/");
             device.executeShell("/system/bin/screencap", "-p", "/sdcard/screenshot/screenshot.png");
+            //截图只是发送命令，手机需要一定时间需要完成截屏动作，直接拉去图片可能会报错
+            TimeUnit.SECONDS.sleep(2);
             outputStream =  new ByteArrayOutputStream();
             device.pull(new RemoteFile("/sdcard/screenshot/screenshot.png"), outputStream);
-//            TimeUnit.SECONDS.sleep(3);
             if(outputStream.size() > 0) {
                 image = ImageIO.read(new ByteArrayInputStream(outputStream.toByteArray()));
                 if(null != imageViewer)
                     imageViewer.refreshImage(image);
             }
-        } catch (IOException e) {
+        } catch (IOException | JadbException | InterruptedException e) {
             e.printStackTrace();
-        } catch (JadbException e) {
-            e.printStackTrace();
-        } /*catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
+        }
     }
 
     /**
@@ -165,6 +98,7 @@ public class Picture {
         Point littleManPos = this.computeLittleManPosition();
         Point nextPos = computeNextPosition(littleManPos);
         this.distance = Math.abs(nextPos.getX() - littleManPos.getX());
+        System.out.println(this.distance);
         return distance;
     }
 
@@ -208,7 +142,7 @@ public class Picture {
         Point p = new Point((line[0].getX() + line[1].getX()) / 2,(line[0].getY() + line[1].getY()) / 2);
         if(null != imageViewer)
             imageViewer.showPoint(p,image);
-        System.out.println(p);
+//        System.out.println(p);
         //返回中点
         return p;
     }
@@ -264,7 +198,7 @@ public class Picture {
         //标记绿色
         if(null != imageViewer)
             imageViewer.showPoint(point,image);
-        System.out.println(point);
+//        System.out.println(point);
         return point;
     }
 

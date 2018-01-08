@@ -4,25 +4,24 @@ import se.vidstige.jadb.JadbConnection;
 import se.vidstige.jadb.JadbDevice;
 import se.vidstige.jadb.JadbException;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
- * 启动类
+ * 模拟按压服务
  * Created by ccr at 2018/1/3.
  */
-public class BootStrap {
+public class PressServer {
 
     public static void main(String args[]) {
 
         JadbConnection jadb = null;
-        BufferedReader br = null;
+        DataInputStream reader = null;
+        DataOutputStream writer = null;
         try {
             jadb = new JadbConnection();
             List<JadbDevice> devices = jadb.getDevices();
@@ -31,19 +30,23 @@ public class BootStrap {
             while (true) {
                 System.out.print("等待输入:");
                 Socket client = serverSocket.accept();
-                br = new BufferedReader(new InputStreamReader( new DataInputStream(client.getInputStream())));
-                String input = br.readLine();
+                reader = new DataInputStream(client.getInputStream());
+                writer = new DataOutputStream(client.getOutputStream());
+                String input = reader.readUTF();
                 System.out.println(input);
-                double d = Double.valueOf(input);
+                int d = Integer.valueOf(input);
 //                double time = (d + 3) * 4.09;
+                //计算按压时间
                 double time = d * 1.565;
                 DecimalFormat df = new DecimalFormat("0");
+                //发送按压指令
                 device.executeShell("input","touchscreen","swipe","200","200","200","200",String.valueOf(df.format(time)));
+                //睡眠一定时间后才返回
+                TimeUnit.MILLISECONDS.sleep((long) time + 2000);
+                writer.writeUTF("OK");
             }
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JadbException e) {
+        } catch (IOException | JadbException | InterruptedException e) {
             e.printStackTrace();
         }
 

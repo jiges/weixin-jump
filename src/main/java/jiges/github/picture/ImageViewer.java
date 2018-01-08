@@ -162,17 +162,17 @@ public class ImageViewer  extends JFrame {
                     bgRgb2 = new Rgb(((rgb >> 16) & 0xff) + 10 ,((rgb >> 8) & 0xff) + 10,(rgb & 0xff) + 10);
                 }
                 //如果颜色在小人颜色范围内，则记录首尾点
-                if(!new Rgb((rgb >> 16) & 0xff ,(rgb >> 8) & 0xff,rgb & 0xff).isBetween(bgRgb1,bgRgb2)) {
-                    //解决小人高于方块时的bug
-
-                    line[1].setX(i);
-                } else {
-                    if(line[1].getX() > line[0].getX()) {
-                        break;
-                    }
-                    line[0].setX(i);
-                    line[1].setX(i);
-                }
+//                if(!new Rgb((rgb >> 16) & 0xff ,(rgb >> 8) & 0xff,rgb & 0xff).isBetween(bgRgb1,bgRgb2)) {
+//                    //解决小人高于方块时的bug
+//
+//                    line[1].setX(i);
+//                } else {
+//                    if(line[1].getX() > line[0].getX()) {
+//                        break;
+//                    }
+//                    line[0].setX(i);
+//                    line[1].setX(i);
+//                }
             }
 //            System.out.println(line[0] + "," + line[1]);
             if(line[1].getX() > line[0].getX()) {
