@@ -41,7 +41,7 @@ public class PressServer {
                 DecimalFormat df = new DecimalFormat("0");
                 //发送按压指令
                 device.executeShell("input","touchscreen","swipe","200","200","200","200",String.valueOf(df.format(time)));
-                //睡眠一定时间后才返回
+                //睡眠一定时间后才返回，需要完成跳跃动作
                 TimeUnit.MILLISECONDS.sleep((long) time + 2000);
                 writer.writeUTF("OK");
             }

@@ -5,9 +5,7 @@ import se.vidstige.jadb.JadbConnection;
 import se.vidstige.jadb.JadbDevice;
 import se.vidstige.jadb.JadbException;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.List;
 
@@ -16,6 +14,9 @@ import java.util.List;
  */
 public class PressClient {
 
+    /**
+     * 图片分析
+     */
     public static void main(String[] args) {
         JadbConnection jadb = null;
         try {
@@ -27,9 +28,6 @@ public class PressClient {
             }
             JadbDevice device = devices.get(0);
             Picture picture = new Picture(device);
-//            picture.initImageViewer();
-//            picture.loadPicture();
-//            int loadCnt = 0;
             while(true) {
                 picture.loadPicture();
                 sendCommand(picture.analyze());
@@ -41,7 +39,32 @@ public class PressClient {
         }
     }
 
+    /**
+     * 手动输入距离
+     */
+    /*public static void main(String[] args) {
+        BufferedReader br = null;
+        try {
+            while(true) {
+                //等待键盘输入
+                br = new BufferedReader(new InputStreamReader(System.in));
+                System.out.print("请输入距离:");
+                String input = br.readLine();
+                if(null != input && input.equals("quit")) {
+                    System.exit(0);
+                }
+                sendCommand(Integer.valueOf(input));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }*/
 
+
+    /**
+     * 发送按压命令，可将Socket提出来，不需要每次都建立连接
+     * @param distance 距离
+     */
     public static void sendCommand(int distance) {
         Socket socket = null;
         try {
